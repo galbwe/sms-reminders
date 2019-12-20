@@ -1,11 +1,8 @@
-import os
 from uuid import uuid4
 
 from flask import Flask, request, jsonify
-from twilio.rest import Client
 
-ACCOUNT_SID = os.environ.get('ACCOUNT_SID')
-AUTH_TOKEN = os.environ.get('AUTH_TOKEN')
+from tasks import send_sms
 
 app = Flask(__name__)
 
@@ -50,11 +47,6 @@ def delete_reminder(id):
 def send_reminder(id):
     for reminder in reminders:
         if reminder['id'] == id:
-            client = Client(ACCOUNT_SID, AUTH_TOKEN)
-            client.messages.create(
-                from_=reminder['from'],
-                to=reminder['to'],
-                body=reminder['message']
-            )
+            send_sms.delay(reminder['to'], reminder['from'], reminder['message'])
             return "reminder sent", 200
     return "reminder not found", 400
