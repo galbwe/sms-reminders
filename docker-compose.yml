@@ -13,3 +13,29 @@ services:
       - "5672:5672"
     labels:
       NAME: "rabbitmq1"
+
+  redis:
+    image: redis:5.0.7
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:12.1
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sms_reminders
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - postgres
+    ports:
+      - "5555:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: pgadmin
+    restart: unless-stopped

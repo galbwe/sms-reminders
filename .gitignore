@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# config files
+./src/sms_reminders/config.ini
+
+# data files
+data/
