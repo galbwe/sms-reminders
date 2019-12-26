@@ -1,13 +1,10 @@
-import os
-
 from celery import Celery
 
 from celery.schedules import crontab
 from twilio.rest import Client
 
+from config import config_file, get_twilio_account_config
 
-ACCOUNT_SID = os.environ.get('ACCOUNT_SID')
-AUTH_TOKEN = os.environ.get('AUTH_TOKEN')
 
 app = Celery('tasks', broker="amqp://rabbitmq:rabbitmq@localhost:5672",
              backend="redis://localhost:6379")
@@ -17,9 +14,10 @@ app = Celery('tasks', broker="amqp://rabbitmq:rabbitmq@localhost:5672",
 # @app.task
 # def check_for_messages():
 
-@app.task
+# @app.task
 def send_sms(to, from_, message):
-    client = Client(ACCOUNT_SID, AUTH_TOKEN)
+    account_sid, auth_token = get_twilio_account_config(config_file)
+    client = Client(account_sid, auth_token)
     client.messages.create(
         from_=from_,
         to=to,

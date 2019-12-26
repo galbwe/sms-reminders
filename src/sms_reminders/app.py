@@ -1,28 +1,16 @@
 from uuid import uuid4
-import os
 
-from configparser import ConfigParser
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from sqlalchemy.dialects.postgresql import UUID
 
+from config import config_file, get_database_url
 from tasks import send_sms
 
 app = Flask(__name__)
 
-# database configuration
-def get_database_url(filepath):
-    config = ConfigParser()
-    config.read(filepath)
-    user = config['flask']['database_user']
-    pw = config['flask']['database_password']
-    url = config['flask']['database_host']
-    db = config['flask']['database']
-    return f'postgresql+psycopg2://{user}:{pw}@{url}/{db}'
 
-
-config_file = os.environ.get('CONFIG_FILE') or './config.ini'
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url(config_file)
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
@@ -39,6 +27,7 @@ class Reminder(db.Model):
 class ReminderSchema(ma.ModelSchema):
     class Meta:
         model = Reminder
+        dateformat = '%Y-%m-%d %H:%M:%S%z'
 
 @app.route('/reminders', methods=['GET'])
 def get_all_reminders():
@@ -70,7 +59,7 @@ def edit_reminder(id):
     reminder.message = new_reminder.message
     reminder.time = new_reminder.time
     reminder.is_recurring = new_reminder.is_recurring
-    db.session.commit(reminder)
+    db.session.commit()
     return jsonify(ReminderSchema().dump(reminder)), 200
 
 @app.route('/reminders/<id>', methods=['DELETE'])
@@ -82,5 +71,5 @@ def delete_reminder(id):
 @app.route('/reminders/<id>/send', methods=['GET'])
 def send_reminder(id):
     reminder = Reminder.query.filter_by(uuid=id).first()
-    send_sms.delay(reminder.to, reminder.from_, reminder.message)
+    send_sms(reminder.to, reminder.from_, reminder.message)
     return "reminder sent", 200
