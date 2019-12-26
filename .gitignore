@@ -130,6 +130,7 @@ dmypy.json
 
 # config files
 ./src/sms_reminders/config.ini
+**/config.ini
 
 # data files
 data/
